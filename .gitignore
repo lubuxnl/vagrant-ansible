@@ -1,0 +1,4 @@
+.settings
+.vagrant
+.*project
+setup.retry

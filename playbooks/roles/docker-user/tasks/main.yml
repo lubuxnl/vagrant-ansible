@@ -1,0 +1,40 @@
+---
+- name: Add Docker repository
+  yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable - x86_64
+    baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+    gpgkey: https://download.docker.com/linux/centos/gpg
+
+- name: Install Docker
+  package: name=docker-ce state=present
+
+- name: Docker should be running, and enabled at boot
+  service: name=docker state=started enabled=yes
+
+- name: Install Docker Compose
+  get_url: 
+    url: https://github.com/docker/compose/releases/download/1.18.0/docker-compose-{{ ansible_facts.system }}-{{ ansible_facts.machine }}
+    dest: /usr/local/bin/docker-compose
+    mode: 0755
+
+- name: Add vagrant user to docker group
+  user: name=vagrant groups=docker append=yes
+
+- name: Check Eclipse installed
+  stat: path=/opt/eclipse/eclipse
+  register: eclipse_install
+
+- name: Check Docker tools installed
+  find:
+    paths: /opt/eclipse/features
+    file_type: directory
+    patterns: "org.eclipse.linuxtools.docker.feature*"
+  register: dockertools_results
+  when: eclipse_install.stat.exists == True
+
+- name: Install Docker tools
+  become_user: vagrant
+  shell: eclipse -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/releases/2018-12/ -nosplash -installIU org.eclipse.linuxtools.docker.feature.feature.group
+  when: eclipse_install.stat.exists == True and dockertools_results.matched == 0
+  

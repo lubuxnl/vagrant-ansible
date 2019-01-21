@@ -1,0 +1,9 @@
+---
+- name: Setup guest VM
+  hosts: localhost
+  become: yes
+  roles:
+    - role: java-development
+      tags: java
+    - role: docker-user
+      tags: docker

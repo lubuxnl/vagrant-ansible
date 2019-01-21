@@ -1,0 +1,11 @@
+---
+####################################################
+# Eclipse
+####################################################
+eclipse_url: http://eclipse.bluemix.net/packages/2018-12/data/eclipse-jee-2018-12-R-linux-gtk-x86_64.tar.gz
+eclipse_name: eclipse-jee-2018-12
+####################################################
+# Maven
+####################################################
+maven_url: http://ftp.nluug.nl/internet/apache/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz
+maven_name: apache-maven-3.6.0

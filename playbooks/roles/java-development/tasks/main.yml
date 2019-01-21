@@ -1,0 +1,55 @@
+---
+- name: Install Java
+  package: name=java-1.8.0-openjdk-devel.x86_64 state=present
+
+- name: Define JAVA_HOME
+  template: src=java.sh dest=/etc/profile.d/java.sh
+
+- name: Check Eclipse install directory exists
+  stat: path=/opt/{{ eclipse_name }}
+  register: eclipse_install
+
+- block:
+    - name: Remove Eclipse directory / symlink
+      file: path="/opt/eclipse" state=absent 
+
+    - name: Download and extract Eclipse JEE
+      unarchive: remote_src=yes src="{{ eclipse_url }}" dest="/opt/" owner="vagrant" group="vagrant"
+
+    - name: Rename downloaded Eclipse directory
+      command: mv /opt/eclipse /opt/{{ eclipse_name }}
+
+    - name: Create symlink for Eclipse directory
+      file: dest=/opt/eclipse src=/opt/{{ eclipse_name }} state=link
+  when: eclipse_install.stat.exists == False
+
+- name: Create symlink for Eclipse executable
+  file: dest=/usr/bin/eclipse src=/opt/eclipse/eclipse state=link
+
+- name: Check PyDev installed
+  find:
+    paths: /opt/eclipse/features
+    file_type: directory
+    patterns: "org.python.pydev.feature*"
+  register: pydev_results
+
+- name: Install PyDev
+  become_user: vagrant
+  shell: eclipse -application org.eclipse.equinox.p2.director -repository http://www.pydev.org/update_sites/7.0.3 -nosplash -installIU org.python.pydev.feature.feature.group
+  when: pydev_results.matched == 0
+
+- name: Check Maven install directory exists
+  stat: path=/opt/{{ maven_name }}
+  register: maven_install
+
+- block:
+    - name: Download and extract Maven
+      unarchive: remote_src=yes src="{{ maven_url }}" dest="/opt/" owner="vagrant" group="vagrant"
+
+    - name: Create symlink for Maven directory
+      file: dest=/opt/maven src=/opt/{{ maven_name }} state=link
+  when: maven_install.stat.exists == False
+
+- name: Define M2_HOME
+  template: src=maven.sh dest=/etc/profile.d/maven.sh
+  
