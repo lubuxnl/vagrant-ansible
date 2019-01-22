@@ -52,4 +52,44 @@
 
 - name: Define M2_HOME
   template: src=maven.sh dest=/etc/profile.d/maven.sh
-  
+
+- name: Create Maven global settings
+  template: src=maven-global-settings.xml dest=/opt/maven/conf/settings.xml
+
+- name: Check Maven security settings exists
+  stat: path=~vagrant/.m2/settings-security.xml
+  register: maven_security_settings
+
+- name: Create .m2 directory
+  become_user: vagrant
+  file: path=~/.m2 state=directory
+
+- block:
+    - name: Encrypt Maven master password
+      shell: /opt/maven/bin/mvn --encrypt-master-password "{{maven_master_password}}"
+      register: encryption_result
+
+    - name: Create Maven security settings
+      template: src=settings-security.xml dest=~/.m2/settings-security.xml
+      vars:
+        - encrypted_maven_master_password: "{{encryption_result.stdout}}"
+  become_user: vagrant
+  no_log: true
+  when: maven_security_settings.stat.exists == False
+
+- name: Check Maven user settings exists
+  stat: path=~vagrant/.m2/settings.xml
+  register: maven_user_settings
+
+- block:
+    - name: Encrypt Nexus password
+      shell: /opt/maven/bin/mvn --encrypt-password "{{nexus_password}}"
+      register: encryption_result
+
+    - name: Create Maven user settings
+      template: src=maven-user-settings.xml dest=~/.m2/settings.xml
+      vars:
+        - encrypted_nexus_password: "{{encryption_result.stdout}}"
+  become_user: vagrant
+  no_log: true
+  when: maven_user_settings.stat.exists == False
