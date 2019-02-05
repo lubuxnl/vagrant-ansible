@@ -72,6 +72,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "lubux/centos-ansible"
   #config.vm.box_version = "7.6.1810"
   config.vm.hostname = "centos-ansible"
+  config.vm.define "centos-ansible"
   config.vm.synced_folder '.', disabled: true
   config.vm.synced_folder 'playbooks', '/home/vagrant/playbooks', type: :virtualbox
 
@@ -82,8 +83,8 @@ Vagrant.configure("2") do |config|
     vb.memory = 4096
   end
 
-  #config.vm.provision "shell", path: "scripts/setup.sh", privileged: false
-  config.vm.provision "shell", inline: "cd ~/playbooks;ansible-playbook setup.yml -i hosts --connection=local", privileged: false, run: "always"
+  #config.vm.provision "shell", path: "scripts/setup.sh", privileged: false, run: "always"
+  config.vm.provision "shell", inline: "cd ~/playbooks;ansible-playbook setup.yml -i hosts --connection=local --vault-id dev@prompt", privileged: false
 
   #config.ssh.insert_key = false
   config.ssh.forward_agent = true

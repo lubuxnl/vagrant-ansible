@@ -26,4 +26,16 @@
       <password>{{encrypted_nexus_password}}</password>
     </server>
   </servers>
+
+  <profiles>
+    <profile>
+      <id>vs-docker-user</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <docker.repo>docker-vs-common.virtualsciences.nl/vs</docker.repo>
+      </properties>
+    </profile>
+  </profiles>
 </settings>
