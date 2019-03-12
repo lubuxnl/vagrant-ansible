@@ -2,6 +2,13 @@
 - name: Setup guest VM
   hosts: localhost
   become: yes
+  vars_prompt:
+    - name: nexus_username
+      prompt: "Nexus username"
+      private: no
+    - name: nexus_password
+      prompt: "Nexus password"
+      private: yes
   roles:
     - role: java-development
       tags: java
