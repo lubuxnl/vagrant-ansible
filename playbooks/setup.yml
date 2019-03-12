@@ -11,6 +11,5 @@
       private: yes
   roles:
     - role: java-development
-      tags: java
     - role: docker-user
       tags: docker

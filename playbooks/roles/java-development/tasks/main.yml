@@ -1,13 +1,16 @@
 ---
 - name: Install Java
   package: name=java-1.8.0-openjdk-devel.x86_64 state=present
+  tags: [java,maven,eclipse]
 
 - name: Define JAVA_HOME
   template: src=java.sh dest=/etc/profile.d/java.sh
+  tags: [java,maven,eclipse]
 
 - name: Check Eclipse install directory exists
   stat: path=/opt/{{ eclipse_name }}
   register: eclipse_install
+  tags: eclipse
 
 - block:
     - name: Remove Eclipse directory / symlink
@@ -22,9 +25,11 @@
     - name: Create symlink for Eclipse directory
       file: dest=/opt/eclipse src=/opt/{{ eclipse_name }} state=link
   when: eclipse_install.stat.exists == False
+  tags: eclipse
 
 - name: Create symlink for Eclipse executable
   file: dest=/usr/bin/eclipse src=/opt/eclipse/eclipse state=link
+  tags: eclipse
 
 - name: Check PyDev installed
   find:
@@ -32,15 +37,18 @@
     file_type: directory
     patterns: "org.python.pydev.feature*"
   register: pydev_results
+  tags: eclipse
 
 - name: Install PyDev
   become_user: vagrant
   shell: eclipse -application org.eclipse.equinox.p2.director -repository http://www.pydev.org/update_sites/7.0.3 -nosplash -installIU org.python.pydev.feature.feature.group
   when: pydev_results.matched == 0
+  tags: eclipse
 
 - name: Check Maven install directory exists
   stat: path=/opt/{{ maven_name }}
   register: maven_install
+  tags: maven
 
 - block:
     - name: Download and extract Maven
@@ -49,16 +57,20 @@
     - name: Create symlink for Maven directory
       file: dest=/opt/maven src=/opt/{{ maven_name }} state=link
   when: maven_install.stat.exists == False
+  tags: maven
 
 - name: Define M2_HOME
   template: src=maven.sh dest=/etc/profile.d/maven.sh
+  tags: maven
 
 - name: Create Maven global settings
   template: src=maven-global-settings.xml dest=/opt/maven/conf/settings.xml
+  tags: maven
 
 - name: Check Maven security settings exists
   stat: path=~vagrant/.m2/settings-security.xml
   register: maven_security_settings
+  tags: maven
 
 - name: Create .m2 directory
   become_user: vagrant
@@ -76,10 +88,12 @@
   become_user: vagrant
   no_log: true
   when: maven_security_settings.stat.exists == False
+  tags: maven
 
 - name: Check Maven user settings exists
   stat: path=~vagrant/.m2/settings.xml
   register: maven_user_settings
+  tags: maven
 
 - block:
     - name: Encrypt Nexus password
@@ -92,4 +106,5 @@
         - encrypted_nexus_password: "{{encryption_result.stdout}}"
   become_user: vagrant
   no_log: true
-  when: maven_user_settings.stat.exists == False
+  when: maven_user_settings.stat.exists == False or maven_security_settings.stat.exists == False
+  tags: maven
