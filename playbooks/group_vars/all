@@ -10,3 +10,8 @@ eclipse_name: eclipse-jee-2018-12
 maven_url: http://ftp.nluug.nl/internet/apache/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz
 maven_name: apache-maven-3.6.0
 maven_master_password: passw0rd
+####################################################
+# Kafka
+####################################################
+kafka_url: https://www-eu.apache.org/dist/kafka/2.1.1/kafka_2.12-2.1.1.tgz
+kafka_name: kafka_2.12-2.1.1

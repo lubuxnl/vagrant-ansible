@@ -1,0 +1,30 @@
+---
+- name: Check Kafka install directory exists
+  stat: path=/opt/{{ kafka_name }}
+  register: kafka_install
+
+- block:
+    - name: Remove Kafka directory / symlink
+      file: path="/opt/kafka" state=absent 
+
+    - name: Download and extract Kafka
+      unarchive: remote_src=yes src="{{ kafka_url }}" dest="/opt/" owner="vagrant" group="vagrant"
+
+    - name: Create symlink for Kafka directory
+      file: dest=/opt/kafka src=/opt/{{ kafka_name }} state=link
+  when: kafka_install.stat.exists == False
+
+- name: Configure Kafka
+  template: src=server.properties dest=/opt/kafka/config/server.properties
+
+- name: Setup Zookeeper service
+  template: src=zookeeper.service dest=/lib/systemd/system/zookeeper.service mode=644
+
+- name: Zookeeper service should be running, and enabled at boot
+  systemd: name=zookeeper state=started enabled=yes
+
+- name: Setup Kafka service
+  template: src=kafka.service dest=/lib/systemd/system/kafka.service mode=644
+
+- name: Kafka service should be running, and enabled at boot
+  systemd: name=kafka state=started enabled=yes

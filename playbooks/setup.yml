@@ -13,3 +13,5 @@
     - role: java-development
     - role: docker-user
       tags: docker
+    - role: kafka-native
+      tags: kafka
