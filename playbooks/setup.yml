@@ -10,8 +10,12 @@
       prompt: "Nexus password"
       private: yes
   roles:
+    - role: common
     - role: java-development
+      tags: [eclipse,maven]
     - role: docker-user
-      tags: docker
+      tags: [docker,k8s]
     - role: kafka-native
       tags: kafka
+    - role: kubernetes
+      tags: k8s

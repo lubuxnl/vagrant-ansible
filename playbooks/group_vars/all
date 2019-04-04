@@ -2,16 +2,25 @@
 ####################################################
 # Eclipse
 ####################################################
-eclipse_url: http://eclipse.bluemix.net/packages/2018-12/data/eclipse-jee-2018-12-R-linux-gtk-x86_64.tar.gz
-eclipse_name: eclipse-jee-2018-12
+eclipse_version: 2019-03
+eclipse_url: http://eclipse.bluemix.net/packages/{{ eclipse_version }}/data/eclipse-jee-{{ eclipse_version }}-R-linux-gtk-x86_64.tar.gz
+eclipse_name: eclipse-jee-{{ eclipse_version }}
 ####################################################
 # Maven
 ####################################################
-maven_url: http://ftp.nluug.nl/internet/apache/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.tar.gz
-maven_name: apache-maven-3.6.0
+maven_version: 3.6.0
+maven_url: http://ftp.nluug.nl/internet/apache/maven/maven-3/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz
+maven_name: apache-maven-{{ maven_version }}
 maven_master_password: passw0rd
 ####################################################
 # Kafka
 ####################################################
 kafka_url: https://www-eu.apache.org/dist/kafka/2.1.1/kafka_2.12-2.1.1.tgz
 kafka_name: kafka_2.12-2.1.1
+####################################################
+# Kubernetes
+####################################################
+k8s_version: 1.14.0
+helm_version: 2.13.1
+helm_url: https://storage.googleapis.com/kubernetes-helm/helm-v{{ helm_version }}-linux-amd64.tar.gz
+helm_name: helm-v{{ helm_version }}

@@ -1,0 +1,20 @@
+---
+- name: Install Java
+  package: name=java-1.8.0-openjdk-devel.x86_64 state=present
+  tags: [java,maven,eclipse,kafka]
+
+- name: Define JAVA_HOME
+  template: src=java.sh dest=/etc/profile.d/java.sh
+  tags: [java,maven,eclipse,kafka]
+
+- name: Disable SWAP
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+  tags: [kafka,k8s]
+
+- name: Disable SWAP in fstab
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*swap.*)$'
+    replace: '#\1'
+  tags: [kafka,k8s]

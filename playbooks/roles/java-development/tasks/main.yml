@@ -1,12 +1,4 @@
 ---
-- name: Install Java
-  package: name=java-1.8.0-openjdk-devel.x86_64 state=present
-  tags: [java,maven,eclipse,kafka]
-
-- name: Define JAVA_HOME
-  template: src=java.sh dest=/etc/profile.d/java.sh
-  tags: [java,maven,eclipse,kafka]
-
 - name: Check Eclipse install directory exists
   stat: path=/opt/{{ eclipse_name }}
   register: eclipse_install
@@ -14,7 +6,7 @@
 
 - block:
     - name: Remove Eclipse directory / symlink
-      file: path="/opt/eclipse" state=absent 
+      file: path="/opt/eclipse" state=absent
 
     - name: Download and extract Eclipse JEE
       unarchive: remote_src=yes src="{{ eclipse_url }}" dest="/opt/" owner="vagrant" group="vagrant"

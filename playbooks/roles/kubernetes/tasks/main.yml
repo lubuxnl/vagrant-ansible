@@ -1,0 +1,124 @@
+# Reference: https://www.digitalocean.com/community/tutorials/how-to-create-a-kubernetes-cluster-using-kubeadm-on-centos-7
+---
+- name: Ensure net.bridge.bridge-nf-call-ip6tables is set to 1
+  sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: 1
+    state: present
+
+- name: Ensure net.bridge.bridge-nf-call-iptables is set to 1
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1
+    state: present
+
+- name: Add Kubernetes repository
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes x86_64
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: yes
+
+- name: Install kubelet
+  yum:
+    name: kubelet-{{ k8s_version }}
+    state: present
+    update_cache: true
+
+- name: Install kubeadm
+  yum:
+    name: kubeadm-{{ k8s_version }}
+    state: present
+
+- name: Install kubectl
+  yum:
+    name: kubectl-{{ k8s_version }}
+    state: present
+    allow_downgrade: yes
+
+- name: Start kubelet
+  service:
+    name: kubelet
+    enabled: yes
+    state: started
+
+- name: Initialize the cluster
+  shell: kubeadm init --pod-network-cidr=10.244.0.0/16 >> cluster_initialized.txt
+  args:
+    chdir: $HOME
+    creates: cluster_initialized.txt
+
+- name: Create .kube directory
+  become_user: vagrant
+  file:
+    path: $HOME/.kube
+    state: directory
+    mode: 0755
+
+- name: Copy admin.conf to vagrant's kube config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/vagrant/.kube/config
+    remote_src: yes
+    owner: vagrant
+
+- name: Install Pod network
+  become_user: vagrant
+  shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml >> pod_network_setup.txt
+  args:
+    chdir: $HOME/.kube
+    creates: pod_network_setup.txt
+
+- name: Allow pods to be scheduled on the master node
+  become_user: vagrant
+  shell: kubectl taint nodes --all node-role.kubernetes.io/master- >> taint_nodes.txt
+  args:
+    chdir: $HOME/.kube
+    creates: taint_nodes.txt
+
+- name: Install Kubernetes dashboard (unprotected)
+  become_user: vagrant
+  shell: kubectl apply -f https://gist.githubusercontent.com/initcron/32ff89394c881414ea7ef7f4d3a1d499/raw/4863613585d05f9360321c7141cc32b8aa305605/kube-dashboard.yaml >> dashboard_setup.txt
+  args:
+    chdir: $HOME/.kube
+    creates: dashboard_setup.txt
+
+- name: Check Helm install directory exists
+  stat: path=/opt/{{ helm_name }}
+  register: helm_install
+
+- block:
+    - name: Remove Helm directory / symlink
+      file: path="/opt/helm" state=absent
+
+    - name: Create Helm directory
+      file: path=/opt/{{ helm_name }} state=directory owner="vagrant" group="vagrant"
+
+    - name: Download and extract Helm
+      unarchive: remote_src=yes src="{{ helm_url }}" dest=/opt/{{ helm_name }} owner="vagrant" group="vagrant"
+
+    - name: Create symlink for Helm directory
+      file: dest=/opt/helm src=/opt/{{ helm_name }}/linux-amd64 state=link
+  when: helm_install.stat.exists == False
+
+- name: Create symlink for Helm executable
+  file: dest=/usr/local/bin/helm src=/opt/helm/helm state=link
+
+- name: Copy Tiller RBAC config
+  become_user: vagrant
+  template: src=tiller_rbac_config.yaml dest=$HOME/.kube
+
+- name: Apply Tiller RBAC config
+  become_user: vagrant
+  shell: kubectl apply -f tiller_rbac_config.yaml >> tiller_rbac_config.txt
+  args:
+    chdir: $HOME/.kube
+    creates: tiller_rbac_config.txt
+
+- name: Initialize Helm
+  become_user: vagrant
+  shell: helm init --service-account tiller >> helm_init.txt
+  args:
+    chdir: $HOME/.kube
+    creates: helm_init.txt

@@ -12,6 +12,13 @@
 - name: Docker should be running, and enabled at boot
   service: name=docker state=started enabled=yes
 
+- name: Disable SELinux
+  command: setenforce 0
+  when: ansible_selinux.status == "enabled"
+
+- name: Disable SELinux on reboot
+  selinux: state=disabled
+
 - name: Install Docker Compose
   get_url: 
     url: https://github.com/docker/compose/releases/download/1.18.0/docker-compose-{{ ansible_facts.system }}-{{ ansible_facts.machine }}
@@ -37,4 +44,3 @@
   become_user: vagrant
   shell: eclipse -application org.eclipse.equinox.p2.director -repository http://download.eclipse.org/releases/2018-12/ -nosplash -installIU org.eclipse.linuxtools.docker.feature.feature.group
   when: eclipse_install.stat.exists == True and dockertools_results.matched == 0
-  
