@@ -73,6 +73,7 @@ Vagrant.configure("2") do |config|
   #config.vm.box_version = "7.6.1810"
   config.vm.hostname = "centos-ansible"
   config.vm.define "centos-ansible"
+  config.vm.network "private_network", ip: "192.168.56.101"
   config.vm.synced_folder '.', disabled: true
   config.vm.synced_folder 'playbooks', '/home/vagrant/playbooks', type: :virtualbox
 
@@ -80,7 +81,7 @@ Vagrant.configure("2") do |config|
     vb.name = "centos-ansible"
     vb.gui = false
     vb.cpus = 2
-    vb.memory = 4096
+    vb.memory = 8192
   end
 
   #config.vm.provision "shell", path: "scripts/setup.sh", privileged: false, run: "always"
