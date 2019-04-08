@@ -28,3 +28,30 @@
 
 - name: Kafka service should be running, and enabled at boot
   systemd: name=kafka state=started enabled=yes
+
+- name: Check Kafka Manager install directory exists
+  stat: path=/opt/{{ kafka_manager_name }}
+  register: kafka_manager_install
+
+- block:
+    - name: Remove Kafka Manager directory / symlink
+      file: path="/opt/kafka-manager" state=absent 
+
+    - name: Download and extract Kafka Manager source
+      unarchive: remote_src=yes src="{{ kafka_manager_url }}" dest=/opt owner="vagrant" group="vagrant"
+
+    - name: Build Kafka Manager
+      become_user: vagrant
+      shell: ./sbt clean dist
+      args:
+        chdir: /opt/{{ kafka_manager_name }}
+
+    - name: Extract Kafka Manager distribution
+      unarchive: remote_src=yes src=/opt/{{ kafka_manager_name }}/target/universal/kafka-manager-{{ kakfa_manager_version }}.zip dest=/opt owner="vagrant" group="vagrant"
+
+    - name: Create symlink for Kafka Manager directory
+      file: dest=/opt/kafka-manager src=/opt/{{ kafka_manager_name }} state=link
+  when: kafka_manager_install.stat.exists == False
+
+- name: Configure Kafka Manager
+  template: src=application.conf dest=/opt/kafka-manager/conf
