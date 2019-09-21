@@ -69,13 +69,16 @@
   # SHELL
 
 Vagrant.configure("2") do |config|
+  config.vm.define "centos-ansible"
   config.vm.box = "lubux/centos-ansible"
   #config.vm.box_version = "7.6.1810"
   config.vm.hostname = "centos-ansible"
-  config.vm.define "centos-ansible"
   config.vm.network "private_network", ip: "192.168.56.101"
+  config.vm.network "forwarded_port", guest: 2181, host: 2181
+  config.vm.network "forwarded_port", guest: 9092, host: 9092
   config.vm.synced_folder '.', disabled: true
   config.vm.synced_folder 'playbooks', '/home/vagrant/playbooks', type: :virtualbox
+  config.vm.synced_folder 'work', '/home/vagrant/work', type: :virtualbox
 
   config.vm.provider :virtualbox do |vb|
     vb.name = "centos-ansible"
