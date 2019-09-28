@@ -33,7 +33,7 @@
 
 - name: Install PyDev
   become_user: vagrant
-  shell: eclipse -application org.eclipse.equinox.p2.director -repository http://www.pydev.org/update_sites/7.0.3 -nosplash -installIU org.python.pydev.feature.feature.group
+  shell: eclipse -application org.eclipse.equinox.p2.director -repository http://www.pydev.org/updates -nosplash -installIU org.python.pydev.feature.feature.group
   when: pydev_results.matched == 0
   tags: eclipse
 

@@ -3,13 +3,13 @@
 - name: Ensure net.bridge.bridge-nf-call-ip6tables is set to 1
   sysctl:
     name: net.bridge.bridge-nf-call-ip6tables
-    value: 1
+    value: '1'
     state: present
 
 - name: Ensure net.bridge.bridge-nf-call-iptables is set to 1
   sysctl:
     name: net.bridge.bridge-nf-call-iptables
-    value: 1
+    value: '1'
     state: present
 
 - name: Add Kubernetes repository
@@ -19,6 +19,12 @@
     baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
     gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
     gpgcheck: yes
+
+- name: Install bash-completion
+  yum:
+    name: bash-completion
+    state: present
+    update_cache: true
 
 - name: Install kubelet
   yum:
@@ -77,12 +83,37 @@
     chdir: $HOME/.kube
     creates: taint_nodes.txt
 
-- name: Install Kubernetes dashboard (unprotected)
+- name: Provide kubectl bash autocompletion
+  template: src=kubectl.sh dest=/etc/profile.d/kubectl.sh
+
+- name: Install Kubernetes dashboard
   become_user: vagrant
-  shell: kubectl apply -f https://gist.githubusercontent.com/initcron/32ff89394c881414ea7ef7f4d3a1d499/raw/4863613585d05f9360321c7141cc32b8aa305605/kube-dashboard.yaml >> dashboard_setup.txt
+  shell: kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/{{ k8s_dashboard_version }}/aio/deploy/recommended.yaml >> dashboard_setup.txt
   args:
     chdir: $HOME/.kube
     creates: dashboard_setup.txt
+
+- name: Copy Kubernetes dashboard RBAC config
+  become_user: vagrant
+  template: src=k8s_dashboard_rbac_config.yaml dest=$HOME/.kube
+
+- name: Apply Kubernetes dashboard config
+  become_user: vagrant
+  shell: kubectl apply -f k8s_dashboard_rbac_config.yaml >> k8s_dashboard_rbac_config.txt
+  args:
+    chdir: $HOME/.kube
+    creates: k8s_dashboard_rbac_config.txt
+
+- name: Create bin directory
+  become_user: vagrant
+  file:
+    path: $HOME/bin
+    state: directory
+    mode: 0755
+
+- name: Copy showtoken script
+  become_user: vagrant
+  template: src=showtoken.sh dest=$HOME/bin mode=0755
 
 - name: Check Helm install directory exists
   stat: path=/opt/{{ helm_name }}
